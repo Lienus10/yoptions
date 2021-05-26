@@ -12,14 +12,14 @@ Installation
 
 You can install the library by using:
 ``` {.sourceCode .bash}
-pip install y-options
+pip install yoptions
 ```
 
 Import
 ------
 
 ``` {.sourceCode .python}
-import y-options as yo
+import yoptions as yo
 ```
 
 

@@ -6,9 +6,9 @@ here = pathlib.Path(__file__).parent.resolve()
 long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
-    name='y-options',
+    name='yoptions',
 
-    version='1.0.12',
+    version='0.0.1',
 
     description='This downloads stock option data and calculates its greeks.',
 
@@ -16,7 +16,7 @@ setup(
 
     long_description_content_type='text/markdown',
 
-    url='https://github.com/Lienus10/y_options',
+    url='https://github.com/Lienus10/yoptions',
 
     author='Julius Langer',
 
