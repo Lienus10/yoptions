@@ -8,7 +8,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 setup(
     name='yoptions',
 
-    version='0.0.2',
+    version='0.0.3',
 
     description='This downloads stock option data and calculates its greeks.',
 
@@ -39,5 +39,7 @@ setup(
     packages=find_packages(),
 
     python_requires='>=3.6, <4',
+
+    install_requires=['xmltodict']
 
 )
