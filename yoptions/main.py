@@ -3,9 +3,9 @@ import json
 import datetime
 import calendar
 from math import log, sqrt, exp
+
+import xmltodict
 from scipy.stats import norm
-import requests
-from bs4 import BeautifulSoup
 import pandas as pd
 
 
@@ -378,34 +378,36 @@ def __greeks(data, chain, option_type, r=None, dividend_yield=None):
 
 
 def __risk_free(days):
-    r = requests.get(
-        "http://www.treasury.gov/resource-center/data-chart-center/interest-rates/Pages/TextView.aspx?data=yield")
-    soup = BeautifulSoup(r.text, 'html.parser')
+    file = urllib.request.urlopen('https://home.treasury.gov/sites/default/files/interest-rates/yield.xml')
+    data = file.read()
+    file.close()
 
-    table = soup.find("table", attrs={'class': 't-chart'})
-    rows = table.find_all('tr')
-    lastrow = len(rows) - 1
-    cells = rows[lastrow].find_all("td")
+    data = \
+    xmltodict.parse(data)['QR_BC_CM']['LIST_G_WEEK_OF_MONTH']['G_WEEK_OF_MONTH'][-1]['LIST_G_NEW_DATE']['G_NEW_DATE'][
+        -1]['LIST_G_BC_CAT']['G_BC_CAT']
 
     if days < 45:
-        return float(cells[1].get_text())
+        return float(data['BC_1MONTH'])
     else:
         if days < 75:
-            return float(cells[2].get_text())
+            return float(data['BC_2MONTH'])
         else:
             if days < 135:
-                return float(cells[3].get_text())
+                return float(data['BC_3MONTH'])
             else:
-                if days < 272:
-                    return float(cells[4].get_text())
+                if days < 165:
+                    return float(data['BC_4MONTH'])
                 else:
-                    if days < 547:
-                        return float(cells[5].get_text())
+                    if days < 272:
+                        return float(data['BC_6MONTH'])
                     else:
-                        if days < 912:
-                            return float(cells[6].get_text())
+                        if days < 547:
+                            return float(data['BC_1YEAR'])
                         else:
-                            return float(cells[7].get_text())
+                            if days < 912:
+                                return float(data['BC_2YEAR'])
+                            else:
+                                return float(data['BC_3YEAR'])
 
 
 def __to_timestamp(date):
