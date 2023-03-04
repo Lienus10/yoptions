@@ -8,7 +8,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 setup(
     name='yoptions',
 
-    version='0.0.3',
+    version='0.0.4',
 
     description='This downloads stock option data and calculates its greeks.',
 

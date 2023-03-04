@@ -341,16 +341,23 @@ def __greeks(data, chain, option_type, r=None, dividend_yield=None):
         if dividend_yield is not None:
 
             if option_type == 'c':
-                d1 = (log(float(underlying_price) / strike[-1]) + ((r - dividend_yield) + v * v / 2.) * t) / (
-                        v * t_sqrt)
-                d2 = d1 - v * t_sqrt
-                delta.append(round(norm.cdf(d1), 4))
-                gamma.append(round(norm.pdf(d1) / (underlying_price * v * t_sqrt), 4))
-                theta.append(
-                    round((-(underlying_price * v * norm.pdf(d1)) / (2 * t_sqrt) -
-                           r * strike[-1] * exp(-r * t) * norm.cdf(d2)) / 365, 4))
-                vega.append(round(underlying_price * t_sqrt * norm.pdf(d1) / 100, 4))
-                rho.append(round(strike[-1] * t * exp(-r * t) * norm.cdf(d2) / 100, 4))
+                if v != 0:
+                    d1 = (log(float(underlying_price) / strike[-1]) + ((r - dividend_yield) + v * v / 2.) * t) / (
+                            v * t_sqrt)
+                    d2 = d1 - v * t_sqrt
+                    delta.append(round(norm.cdf(d1), 4))
+                    gamma.append(round(norm.pdf(d1) / (underlying_price * v * t_sqrt), 4))
+                    theta.append(
+                        round((-(underlying_price * v * norm.pdf(d1)) / (2 * t_sqrt) -
+                               r * strike[-1] * exp(-r * t) * norm.cdf(d2)) / 365, 4))
+                    vega.append(round(underlying_price * t_sqrt * norm.pdf(d1) / 100, 4))
+                    rho.append(round(strike[-1] * t * exp(-r * t) * norm.cdf(d2) / 100, 4))
+                else:
+                    delta.append(0)
+                    gamma.append(0)
+                    theta.append(0)
+                    vega.append(0)
+                    rho.append(0)
 
             if option_type == 'p':
                 d1 = (log(float(underlying_price) / strike[-1]) + r * t) / (v * t_sqrt) + 0.5 * v * t_sqrt
@@ -382,9 +389,17 @@ def __risk_free(days):
     data = file.read()
     file.close()
 
-    data = \
-    xmltodict.parse(data)['QR_BC_CM']['LIST_G_WEEK_OF_MONTH']['G_WEEK_OF_MONTH'][-1]['LIST_G_NEW_DATE']['G_NEW_DATE'][
-        -1]['LIST_G_BC_CAT']['G_BC_CAT']
+    data = xmltodict.parse(data)['QR_BC_CM']['LIST_G_WEEK_OF_MONTH']['G_WEEK_OF_MONTH']
+
+    try:
+        data = data[-1]['LIST_G_NEW_DATE']['G_NEW_DATE']
+    except:
+        data = data['LIST_G_NEW_DATE']['G_NEW_DATE']
+
+    try:
+        data = data[-1]['LIST_G_BC_CAT']['G_BC_CAT']
+    except:
+        data = data['LIST_G_BC_CAT']['G_BC_CAT']
 
     if days < 45:
         return float(data['BC_1MONTH'])
