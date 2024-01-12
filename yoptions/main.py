@@ -336,6 +336,9 @@ def __greeks(data, chain, option_type, r=None, dividend_yield=None):
 
         t = (expiration_date - today).days / 365
         v = implied_volatility[-1]
+        if t <= 0:
+            # Handle the case where time to expiration is non-positive
+            continue
         t_sqrt = sqrt(t)
 
         if dividend_yield is not None:
