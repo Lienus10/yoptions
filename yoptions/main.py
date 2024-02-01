@@ -18,9 +18,6 @@ URLQ2_V7 = "https://query2.finance.yahoo.com/v7/finance/options/"
 # Option_type: 'c' - call or 'p' - put
 def get_chain_greeks(stock_ticker, dividend_yield, option_type, risk_free_rate=None):
     data = url_fetch(stock_ticker)
-    # with urllib.request.urlopen("https://query2.finance.yahoo.com/v7/finance/options/" + stock_ticker) as url:
-    #   data = json.loads(url.read().decode())
-
     return __get_chain(option_type, data, dividend_yield, risk_free_rate)
 
 
@@ -72,10 +69,6 @@ def get_option_greeks_ticker(option_ticker, dividend_yield, risk_free_rate=None)
     date = __to_timestamp(date)
 
     data = url_fetch(ticker + '?date=' + date)
-    # TODO with urllib.request.urlopen(
-    #         "https://query2.finance.yahoo.com/v7/finance/options/" + ticker + '?date=' + date) as url:
-    #     data = json.loads(url.read().decode())
-
     if option_type == 'c':
         type_data = data["optionChain"]["result"][0]["options"][0]["calls"]
     else:
@@ -88,20 +81,6 @@ def get_option_greeks_ticker(option_ticker, dividend_yield, risk_free_rate=None)
 
 # Get historic option price data for a specific option based on the option's ticker symbol.
 def get_historical_option_ticker(option_ticker):
-    # try:
-    # with urllib.request.urlopen(
-    #         "https://query1.finance.yahoo.com/v8/finance/chart/" + option_ticker + '?interval=1d&range=max') as url:
-    #     data = json.loads(url.read().decode())
-
-    # timestamps = data['chart']['result'][0]['timestamp']
-
-    # except:
-    #     with urllib.request.urlopen(
-    #             "https://query1.finance.yahoo.com/v8/finance/chart/" + option_ticker + '?interval=1d&range=ytd') as url:
-    #         data = json.loads(url.read().decode())
-    #
-    #     timestamps = data['chart']['result'][0]['timestamp']
-
     data = url_fetch(option_ticker + '?interval=1d&range=max')
     if len(data) == 0:
         data = url_fetch(option_ticker + '?interval=1d&range=ytd')
@@ -116,7 +95,7 @@ def get_historical_option_ticker(option_ticker):
     adjclose = data['chart']['result'][0]['indicators']['adjclose'][0]['adjclose']
 
     for i in timestamps:
-        date.append(datetime.datetime.fromtimestamp(i).strftime("%Y-%m-%d"))
+        date.append(datetime.datetime.utcfromtimestamp(i).strftime("%Y-%m-%d"))
 
     return pd.DataFrame(
         list(zip(date, open, high, low, close, adjclose, volume)),
@@ -141,8 +120,6 @@ def get_historical_option(stock_ticker, expiration_date, strike, option_type):
 # Get option chain for the next expiration date without greeks
 # Option_type: 'c' - call or 'p' - put
 def get_plain_chain(stock_ticker, option_type):
-    # with urllib.request.urlopen("https://query2.finance.yahoo.com/v7/finance/options/" + stock_ticker) as url:
-    #     data = json.loads(url.read().decode())
     data = url_fetch(stock_ticker)
     return __get_chain(option_type, data)
 
@@ -152,10 +129,6 @@ def get_plain_chain(stock_ticker, option_type):
 # Option_type: 'c' - call or 'p' - put
 def get_plain_chain_date(stock_ticker, option_type, expiration_date):
     date = __to_timestamp(expiration_date)
-    #
-    # with urllib.request.urlopen(
-    #         "https://query2.finance.yahoo.com/v7/finance/options/" + stock_ticker + '?date=' + date) as url:
-    #     data = json.loads(url.read().decode())
     data = url_fetch(stock_ticker + '?date=' + date)
     return __get_chain(option_type, data)
 
@@ -165,11 +138,6 @@ def get_plain_chain_date(stock_ticker, option_type, expiration_date):
 # Option_type: 'c' - call or 'p' - put
 def get_plain_option(stock_ticker, expiration_date, option_type, strike):
     expiration_date = __to_timestamp(expiration_date)
-
-    #
-    # with urllib.request.urlopen(
-    #         "https://query2.finance.yahoo.com/v7/finance/options/" + stock_ticker + '?date=' + expiration_date) as url:
-    #     data = json.loads(url.read().decode())
     data = url_fetch(stock_ticker + '?date=' + expiration_date)
     if option_type == 'c':
         type_data = data["optionChain"]["result"][0]["options"][0]["calls"]
@@ -197,10 +165,6 @@ def get_plain_option_ticker(option_ticker):
 
     date = __to_timestamp(date)
 
-    # with urllib.request.urlopen(
-    #         "https://query2.finance.yahoo.com/v7/finance/options/" + ticker + '?date=' + date) as url:
-    #     data = json.loads(url.read().decode())
-
     data = url_fetch(ticker + '?date=' + date)
     if option_type == 'c':
         type_data = data["optionChain"]["result"][0]["options"][0]["calls"]
@@ -214,9 +178,6 @@ def get_plain_option_ticker(option_ticker):
 
 # Get all expiration dates for options of a specific stock.
 def get_expiration_dates(stock_ticker):
-    # with urllib.request.urlopen("https://query1.finance.yahoo.com/v7/finance/options/" + stock_ticker) as url:
-    #     data = json.loads(url.read().decode())
-
     data = url_fetch(stock_ticker)
     if not data["optionChain"]["result"]:
         return 'Error. No options for this symbol!'
@@ -261,7 +222,8 @@ def __get_chain(option_type, data, dividend_yield=None, r=None):
 
 def __greeks(data, chain, option_type, r=None, dividend_yield=None):
     underlying_price = data["optionChain"]["result"][0]["quote"]["regularMarketPrice"]
-    expiration_date = datetime.datetime.utcfromtimestamp(data["optionChain"]["result"][0]["options"][0]["expirationDate"])
+    expiration_date = datetime.datetime.utcfromtimestamp(
+        data["optionChain"]["result"][0]["options"][0]["expirationDate"])
     today = datetime.datetime.now()
 
     if r is None:
@@ -292,7 +254,7 @@ def __greeks(data, chain, option_type, r=None, dividend_yield=None):
             contract_symbols.append('-')
 
         try:
-            last_traded.append(str(datetime.datetime.fromtimestamp(i["lastTradeDate"])
+            last_traded.append(str(datetime.datetime.utcfromtimestamp(i["lastTradeDate"])
                                    .strftime("%Y-%m-%d %I:%M:%S %p")))
         except KeyError:
             last_traded.append('-')
@@ -342,7 +304,8 @@ def __greeks(data, chain, option_type, r=None, dividend_yield=None):
         except KeyError:
             implied_volatility.append(-1)
 
-        t = (expiration_date - today).days / 365
+        t = (expiration_date + datetime.timedelta(seconds=17.5*3600) - today).days / 365
+
         v = implied_volatility[-1]
         if t <= 0:
             # Handle the case where time to expiration is non-positive
